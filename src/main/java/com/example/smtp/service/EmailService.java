@@ -2,8 +2,8 @@ package com.example.smtp.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -15,59 +15,88 @@ import com.example.smtp.repository.StudentRepository;
 
 @Service
 public class EmailService {
+
     @Autowired
-private EmailRepository emailRepository;
+    private EmailRepository emailRepository;
 
-@Value("${spring.mail.username}")
-private String fromEmail;
-
-@Autowired
-private StudentRepository studentRepository;
+    @Autowired
+    private StudentRepository studentRepository;
 
     @Autowired
     private JavaMailSender mailSender;
 
-   public String sendSavedEmail(Integer id) {
+    @Value("${spring.mail.username}")
+    private String fromEmail;
 
-    Email email = emailRepository.findById(id).orElse(null);
-
-    if (email == null) {
-        return "Email Template Not Found";
-    }
-
-    List<Student> students = studentRepository.findByStatus("Interested");
-
-    for (Student student : students) {
-
-        SimpleMailMessage mail = new SimpleMailMessage();
-
-        mail.setFrom(fromEmail);
-        mail.setTo(student.getEmail());
-        mail.setSubject(email.getSubject());
-        mail.setText(email.getMessage());
-
-        mailSender.send(mail);
+    // Send Saved Email
+    public String sendSavedEmail(Integer id) {
 
         try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+
+            Email email = emailRepository.findById(id).orElse(null);
+
+            if (email == null) {
+                return "Email Template Not Found";
+            }
+
+            List<Student> students = studentRepository.findByStatus("Interested");
+
+            if (students.isEmpty()) {
+                return "No Interested Students Found";
+            }
+
+            for (Student student : students) {
+
+                SimpleMailMessage mail = new SimpleMailMessage();
+
+                mail.setFrom(fromEmail);
+                mail.setTo(student.getEmail());
+                mail.setSubject(email.getSubject());
+                mail.setText(email.getMessage());
+
+                mailSender.send(mail);
+
+                Thread.sleep(2000);
+            }
+
+            return "Email Sent Successfully";
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return "ERROR : "
+                    + e.getClass().getSimpleName()
+                    + "\n"
+                    + e.getMessage();
         }
     }
 
-    return "Email Sent Successfully";
-}
-public String sendEmail(String to, String subject, String message) {
+    // Send Single Email
+    public String sendEmail(String to, String subject, String message) {
 
-    SimpleMailMessage mail = new SimpleMailMessage();
+        try {
 
-    mail.setFrom(fromEmail);
-    mail.setTo(to);
-    mail.setSubject(subject);
-    mail.setText(message);
+            SimpleMailMessage mail = new SimpleMailMessage();
 
-    mailSender.send(mail);
+            mail.setFrom(fromEmail);
+            mail.setTo(to);
+            mail.setSubject(subject);
+            mail.setText(message);
 
-    return "Email Sent Successfully";
-}
+            mailSender.send(mail);
+
+            return "Email Sent Successfully";
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return "ERROR : "
+                    + e.getClass().getSimpleName()
+                    + "\n"
+                    + e.getMessage();
+        }
+    }
+
 }

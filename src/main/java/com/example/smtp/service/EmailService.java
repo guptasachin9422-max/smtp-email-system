@@ -2,6 +2,7 @@ package com.example.smtp.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,14 +18,16 @@ public class EmailService {
     @Autowired
 private EmailRepository emailRepository;
 
+@Value("${spring.mail.username}")
+private String fromEmail;
+
 @Autowired
 private StudentRepository studentRepository;
 
     @Autowired
     private JavaMailSender mailSender;
 
-    // Single Email
-    public String sendSavedEmail(Integer id) {
+   public String sendSavedEmail(Integer id) {
 
     Email email = emailRepository.findById(id).orElse(null);
 
@@ -38,6 +41,7 @@ private StudentRepository studentRepository;
 
         SimpleMailMessage mail = new SimpleMailMessage();
 
+        mail.setFrom(fromEmail);
         mail.setTo(student.getEmail());
         mail.setSubject(email.getSubject());
         mail.setText(email.getMessage());
@@ -45,12 +49,11 @@ private StudentRepository studentRepository;
         mailSender.send(mail);
 
         try {
-            Thread.sleep(10000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
-    
 
     return "Email Sent Successfully";
 }
@@ -58,6 +61,7 @@ public String sendEmail(String to, String subject, String message) {
 
     SimpleMailMessage mail = new SimpleMailMessage();
 
+    mail.setFrom(fromEmail);
     mail.setTo(to);
     mail.setSubject(subject);
     mail.setText(message);
@@ -66,5 +70,4 @@ public String sendEmail(String to, String subject, String message) {
 
     return "Email Sent Successfully";
 }
-
 }
